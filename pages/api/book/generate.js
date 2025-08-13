@@ -50,7 +50,7 @@ async function responsesJSON(systemPrompt, userPrompt) {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ],
-    text: { format: 'json' } // <- clave del parche
+    text: { format: 'json' } // <-- parche clave
   });
   const txt = r.output_text ?? (r.output?.[0]?.content?.[0]?.text?.value ?? '{}');
   return txt;
