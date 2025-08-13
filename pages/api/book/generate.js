@@ -42,34 +42,29 @@ async function safeChatCreate(params) {
   }
 }
 
-// Responses API helpers (serie 5)
+// Responses API helpers (serie 5) — usa text.format en lugar de response_format
 async function responsesJSON(systemPrompt, userPrompt) {
   const r = await openai.responses.create({
     model: MODEL,
-    // No seteamos temperature; dejamos default del modelo
     input: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ],
-    // Pedimos JSON llano
-    response_format: { type: 'json_object' }
+    text: { format: 'json' } // <- clave del parche
   });
-  const txt = r.output_text || '{}';
+  const txt = r.output_text ?? (r.output?.[0]?.content?.[0]?.text?.value ?? '{}');
   return txt;
 }
 
 function extractJSON(text, fallbackKey) {
   try {
-    // Primero intento: ya es JSON puro
     return JSON.parse(text);
   } catch {
-    // Segundo intento: extraer bloque desde primera { a última }
     const m = String(text).match(/\{[\s\S]*\}/);
     if (m) {
       try { return JSON.parse(m[0]); } catch {}
     }
   }
-  // Fallback
   return fallbackKey ? { [fallbackKey]: [] } : {};
 }
 
@@ -121,7 +116,8 @@ export default async function handler(req, res) {
 
     for (const item of effectiveOutline) {
       let chJson;
-      const prompt = 'BRIEF:\n' + JSON.stringify(intake.brief, null, 2) +
+      const prompt =
+        'BRIEF:\n' + JSON.stringify(intake.brief, null, 2) +
         '\nEscribe el CAPITULO ' + item.n + ' titulado "' + item.titulo +
         '" (JSON con campo "capitulos":[{n,titulo,texto}]).';
 
