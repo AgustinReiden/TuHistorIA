@@ -1,6 +1,6 @@
 import { openai } from '../../../lib/openai'; import { jsonResponse, requireSecret } from '../../../lib/utils'; import fs from 'fs'; import path from 'path';
 const guide=fs.readFileSync(path.join(process.cwd(),'prompts/intake_guide.md'),'utf8');
 export default async function handler(req,res){ try{ if(req.method!=='POST') return jsonResponse(res,405,{error:'Method not allowed'}); requireSecret(req); const {message}=req.body||{}; if(!message) return jsonResponse(res,400,{error:'message required'});
-const completion=await openai.chat.completions.create({ model:process.env.OPENAI_MODEL_PREVIEW||'gpt-4.1-mini', temperature:0.4, messages:[{role:'system',content:guide},{role:'user',content:message}] });
+const completion=await openai.chat.completions.create({ model:process.env.OPENAI_MODEL_PREVIEW||'gpt-5-mini', messages:[{role:'system',content:guide},{role:'user',content:message}] });
 const text=completion.choices?.[0]?.message?.content||''; let brief=null, previewText=text; try{ const start=text.indexOf('{'); const end=text.lastIndexOf('}'); if(start>=0&&end>start){ const obj=JSON.parse(text.slice(start,end+1)); if(obj&&obj.brief){ brief=obj; previewText=(obj.sinopsis||'')+'\n\n'+(obj.primera_pagina||''); } } }catch(e){}
 return jsonResponse(res,200,{ok:true,preview:previewText,brief}); }catch(e){ const code=e.code===403?403:500; return jsonResponse(res,code,{error:e.message||'error'});} }
