@@ -42,7 +42,7 @@ async function safeChatCreate(params) {
   }
 }
 
-// Responses API helpers (serie 5) — usa text.format en lugar de response_format
+// Responses API helpers (serie 5) — usar text.format con json_object
 async function responsesJSON(systemPrompt, userPrompt) {
   const r = await openai.responses.create({
     model: MODEL,
@@ -50,7 +50,7 @@ async function responsesJSON(systemPrompt, userPrompt) {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ],
-    text: { format: 'json' } // <-- parche clave
+    text: { format: { type: 'json_object' } }
   });
   const txt = r.output_text ?? (r.output?.[0]?.content?.[0]?.text?.value ?? '{}');
   return txt;
@@ -199,3 +199,4 @@ export default async function handler(req, res) {
     return jsonResponse(res, code, { error: e.message || 'error' });
   }
 }
+
