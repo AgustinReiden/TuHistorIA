@@ -64,14 +64,14 @@ export default async function handler(req, res) {
     let obj = null;
 
     if (usesResponsesAPI(MODEL)) {
-      // Serie 5 → Responses API: usar text.format (no response_format)
+      // Serie 5 → Responses API: usar text.format con objeto json_object
       const r = await openai.responses.create({
         model: MODEL,
         input: [
           { role: 'system', content: guide },
           { role: 'user', content: message }
         ],
-        text: { format: 'json' } // <-- parche clave
+        text: { format: { type: 'json_object' } }
       });
       const raw = r.output_text ?? (r.output?.[0]?.content?.[0]?.text?.value ?? '{}');
       obj = extractJSON(raw);
