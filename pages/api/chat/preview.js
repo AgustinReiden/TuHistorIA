@@ -11,7 +11,6 @@ function usesResponsesAPI(model) {
 }
 
 function extractJSON(text) {
-  // Intenta JSON directo, si falla intenta extraer { ... }
   try { return JSON.parse(text); } catch {}
   const m = String(text || '').match(/\{[\s\S]*\}/);
   if (m) { try { return JSON.parse(m[0]); } catch {} }
@@ -65,16 +64,16 @@ export default async function handler(req, res) {
     let obj = null;
 
     if (usesResponsesAPI(MODEL)) {
-      // Serie 5 → Responses API con JSON forzado
+      // Serie 5 → Responses API: usar text.format en lugar de response_format
       const r = await openai.responses.create({
         model: MODEL,
         input: [
           { role: 'system', content: guide },
           { role: 'user', content: message }
         ],
-        response_format: { type: 'json_object' }
+        text: { format: 'json' } // <- clave del parche
       });
-      const raw = r.output_text || '{}';
+      const raw = r.output_text ?? (r.output?.[0]?.content?.[0]?.text?.value ?? '{}');
       obj = extractJSON(raw);
       text = raw;
     } else {
@@ -102,7 +101,6 @@ export default async function handler(req, res) {
 
     return jsonResponse(res, 200, { ok: true, preview: previewText, brief, model: MODEL });
   } catch (e) {
-    // Si querés mostrar errores más claros en el widget, devolvemos el mensaje
     const code = e.code === 403 ? 403 : 500;
     return jsonResponse(res, code, { error: e.message || 'error' });
   }
